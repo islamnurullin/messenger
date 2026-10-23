@@ -129,9 +129,7 @@ def health(request: Request) -> Response:
     }
 
     critical_ok = checks["database"]["status"] == "ok" and checks["redis"]["status"] == "ok"
-    degraded = any(
-        checks[name]["status"] == "error" for name in ("centrifugo", "elasticsearch")
-    )
+    degraded = any(checks[name]["status"] == "error" for name in ("centrifugo", "elasticsearch"))
 
     if not critical_ok:
         overall = "unavailable"

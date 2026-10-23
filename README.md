@@ -22,8 +22,13 @@ Electron, мобильное приложение на Flutter. Бэкенд —
 | Node.js | 22+ | веб и десктоп |
 | Docker Desktop | 4.x+ | PostgreSQL, Redis, Centrifugo, Elasticsearch |
 | Git | 2.40+ | версии |
+| PowerShell | 7+ | скрипты `scripts/*.ps1` |
 
 Flutter и Android SDK понадобятся только с недели 8 — сейчас их можно не ставить.
+
+> **PowerShell 7 нужен именно как `pwsh`.** В Windows есть 5.1 (`powershell.exe`), но в
+> `%LOCALAPPDATA%\Microsoft\WindowsApps` может лежать 0-байтная заглушка `pwsh.exe`,
+> которая не запускается. Установка: `winget install --id Microsoft.PowerShell -e`.
 
 ## Быстрый старт
 
@@ -92,9 +97,9 @@ curl http://127.0.0.1:8000/api/health
 {
   "status": "ok",
   "checks": {
-    "database": { "status": "ok", "latency_ms": 1.2 },
-    "redis": { "status": "ok", "latency_ms": 0.8 },
-    "centrifugo": { "status": "ok", "latency_ms": 3.1 },
+    "database": { "status": "ok", "latency_ms": 45.5 },
+    "redis": { "status": "ok", "latency_ms": 281.4 },
+    "centrifugo": { "status": "ok", "latency_ms": 1194.18, "nodes": 1, "version": "6.10.2 OSS" },
     "elasticsearch": { "status": "disabled" }
   }
 }
@@ -103,6 +108,10 @@ curl http://127.0.0.1:8000/api/health
 Если `status` — `degraded`, значит живы БД и Redis, но не отвечает Centrifugo или поиск:
 приложение работает, доставка в реальном времени — нет. `unavailable` и код 503 означают,
 что лежит БД или Redis.
+
+> Centrifugo проверяется через `POST /api` с методом `info`, а не через `GET /health`:
+> в Centrifugo v6 такого эндпоинта нет, и запрос к нему всегда возвращает 404. Подробнее —
+> [docs/troubleshooting.md](docs/troubleshooting.md#особый-случай-centrifugo-живой-но-проверка-даёт-404).
 
 ## Структура репозитория
 

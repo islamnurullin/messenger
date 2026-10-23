@@ -23,9 +23,17 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="User",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("password", models.CharField(max_length=128, verbose_name="password")),
-                ("last_login", models.DateTimeField(blank=True, null=True, verbose_name="last login")),
+                (
+                    "last_login",
+                    models.DateTimeField(blank=True, null=True, verbose_name="last login"),
+                ),
                 (
                     "is_superuser",
                     models.BooleanField(
@@ -44,21 +52,30 @@ class Migration(migrations.Migration):
                         verbose_name="имя пользователя",
                     ),
                 ),
-                ("display_name", models.CharField(blank=True, max_length=64, verbose_name="отображаемое имя")),
+                (
+                    "display_name",
+                    models.CharField(blank=True, max_length=64, verbose_name="отображаемое имя"),
+                ),
                 ("bio", models.CharField(blank=True, max_length=255, verbose_name="о себе")),
                 (
                     "avatar",
-                    models.ImageField(blank=True, null=True, upload_to="avatars/", verbose_name="аватар"),
+                    models.ImageField(
+                        blank=True, null=True, upload_to="avatars/", verbose_name="аватар"
+                    ),
                 ),
                 ("is_active", models.BooleanField(default=True, verbose_name="активен")),
                 ("is_staff", models.BooleanField(default=False, verbose_name="персонал")),
                 (
                     "last_seen_at",
-                    models.DateTimeField(blank=True, null=True, verbose_name="последняя активность"),
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="последняя активность"
+                    ),
                 ),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.now, editable=False, verbose_name="создан"),
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, editable=False, verbose_name="создан"
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True, verbose_name="обновлён")),
                 (

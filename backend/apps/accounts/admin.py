@@ -13,7 +13,10 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {"fields": ("username", "password")}),
         ("Профиль", {"fields": ("display_name", "bio", "avatar")}),
-        ("Права", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        (
+            "Права",
+            {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")},
+        ),
         ("Даты", {"fields": ("last_seen_at", "created_at", "updated_at")}),
     )
     readonly_fields = ("created_at", "updated_at")

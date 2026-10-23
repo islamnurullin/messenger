@@ -5,6 +5,13 @@
 
 ## `pip install` не качает пакеты: SEC_E_NO_CREDENTIALS
 
+> **Чем это закончилось на практике.** Причина оказалась не в сети и не в
+> сертификатах, а в том же ограниченном токене, что и `spawn EPERM` (см. ниже):
+> процесс не имел доступа к профилю ключей пользователя. После установки настоящего
+> PowerShell 7 и перезапуска `pip install` прошёл без единой ошибки, а
+> `Invoke-WebRequest https://pypi.org/simple/django/` стал отдавать 200.
+> Раздел оставлен как список того, что стоит проверить, если ошибка вернётся.
+
 ### Симптом
 
 ```
@@ -20,7 +27,8 @@ curl.exe https://pypi.org/simple/     # curl: (35) schannel: AcquireCredentialsH
 следующий шаг — TLS: Windows-провайдер schannel не может получить учётные данные
 (`AcquireCredentialsHandle`), поэтому рукопожатие не начинается, и `http=000`.
 
-То есть «интернет есть, но HTTPS не работает» — это не про сеть.
+То есть «интернет есть, но HTTPS не работает» — это не про сеть. И `pip install`
+при этом не «медленный»: он висит на попытке установить TLS-соединение.
 
 ### Причина
 
@@ -54,6 +62,18 @@ curl.exe https://pypi.org/simple/     # curl: (35) schannel: AcquireCredentialsH
    ```powershell
    pip install -r requirements.txt --cert "C:\path\to\corporate-root.crt"
    setx REQUESTS_CA_BUNDLE "C:\path\to\corporate-root.crt"
+   ```
+
+5. **Не запускать несколько `pip install` в один venv одновременно.** Два-три
+   параллельных процесса в `.venv` блокируют друг другу файлы, и установка выглядит
+   как зависание. Если это уже случилось: убить все python-процессы, удалить `.venv`
+   и создать заново.
+
+6. Если `%TEMP%` недоступен на запись (`PermissionError: [WinError 5]`), ставить без
+   кеша и без временных каталогов:
+
+   ```powershell
+   .\.venv\Scripts\python.exe -m pip install --no-cache-dir -r requirements.txt --progress-bar off
    ```
 
 ## Ни одна команда не запускается: `spawn EPERM`
@@ -107,8 +127,15 @@ winget install --id Microsoft.PowerShell --source winget
 После установки **полностью перезапустить DSH** и проверить:
 
 ```powershell
-Test-Path 'C:\Program Files\PowerShell\7\pwsh.exe'   # должно стать True
+Get-Command pwsh -All | Select-Object Source
 ```
+
+> **Важно:** установка из Microsoft Store кладёт файлы в
+> `%LOCALAPPDATA%\Microsoft\WindowsApps\Microsoft.PowerShell_<hash>\pwsh.exe`, а не в
+> `C:\Program Files\PowerShell\7\`. Проверять `Test-Path 'C:\Program Files\PowerShell\7\pwsh.exe'`
+> в этом случае бессмысленно — он останется `False`, но команды уже работают.
+> Надёжный признак: `pwsh --version` отвечает, а `Source` в `Get-Command` указывает
+> на путь с `Microsoft.PowerShell_` внутри.
 
 ### Запасной вариант
 
@@ -183,3 +210,79 @@ docker compose -f infra/docker-compose.yml logs centrifugo --tail 30
 
 Если Elasticsearch вообще не запускался — он в профиле `search` и по умолчанию
 выключен. Статус `disabled` в ответе — ожидаемый.
+
+### Особый случай: Centrifugo живой, но проверка даёт 404
+
+```
+"centrifugo": { "status": "error", "http_status": 404 }
+```
+
+**В Centrifugo v6 нет эндпоинта `GET /health`.** Он был в ранних версиях и оттуда
+попал в примеры, но в шестой ветке такого маршрута нет — на любой путь, кроме
+websocket и `/api`, отвечает `404 page not found`.
+
+Проверять надо не `GET /health`, а HTTP API: `POST /api` с методом `info` и ключом
+в заголовке `X-API-Key`. Именно так это сделано в `apps/common/health.py`:
+
+```powershell
+curl.exe -X POST http://127.0.0.1:8001/api `
+  -H "Content-Type: application/json" `
+  -H "X-API-Key: dev-centrifugo-api-key-change-me" `
+  -d '{\"method\":\"info\"}'
+```
+
+Успех — `200` и `{"result":{"nodes":[...]}}`. Если вернулось `401` — не тот ключ;
+если `200` с `{"error":...}` — ключ принят, но запрос отвергнут.
+
+## Django подключается не к той базе: порт 5432 занят
+
+### Симптом
+
+```
+django.db.utils.OperationalError: connection failed: connection to server at
+"127.0.0.1", port 5432 failed: ...
+```
+
+Сообщение приходит в системной кодировке (cp1251) и выглядит кракозябрами, поэтому
+понять его с первого раза трудно. Если добавить `$env:PYTHONIOENCODING='utf-8'`,
+текст становится читаемым.
+
+### Причина
+
+На машине работает **нативная** служба PostgreSQL, которая уже слушает 5432:
+
+```powershell
+Get-Service postgresql*
+```
+
+Docker в такой ситуации не может опубликовать порт 5432 — он молча остаётся за
+нативной службой, и Django подключается к чужому серверу, где базы `messenger` нет.
+
+### Что делать
+
+Проект уже настроен на порт **5433**, чтобы конфликта не было (`infra/docker-compose.yml`,
+`base.py`, `.env.example`). Проверить:
+
+```powershell
+docker compose -f infra/docker-compose.yml ps     # messenger-postgres-1 -> 0.0.0.0:5433->5432
+Get-NetTCPConnection -LocalPort 5433 -State Listen
+```
+
+Останавливать нативную службу не нужно. Если же 5432 свободен и хочется стандартного
+порта — вернуть его через `.env`: `POSTGRES_HOST_PORT=5432` и `POSTGRES_PORT=5432`.
+
+## `manage.py` работает без `.env`
+
+До исправления `backend/.env` создавался скриптом, но **нигде не читался**: настройки
+молча брали значения по умолчанию. Теперь `config/settings/base.py` загружает его через
+`python-dotenv` с `override=False` — переменные окружения из Docker и CI остаются
+главнее файла.
+
+Если настройки «не применяются», проверьте по порядку:
+
+```powershell
+# 1. файл есть?
+Test-Path backend\.env
+# 2. что видит Django на самом деле?
+cd backend; .\.venv\Scripts\python.exe -c "import os,django; os.environ.setdefault('DJANGO_SETTINGS_MODULE','config.settings.dev'); django.setup(); from django.conf import settings; print(settings.DATABASES['default']['PORT'])"
+```
