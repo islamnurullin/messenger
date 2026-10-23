@@ -1,0 +1,25 @@
+# Нормализация переводов строк.
+#
+# Без этого файла Git на Windows предупреждает про CRLF для каждого файла
+# («LF will be replaced by CRLF the next time Git touches it») и в диффах
+# появляются изменения, которых никто не делал. Правило простое: в репозитории
+# всегда LF, а на диске — как принято в ОС.
+* text=auto eol=lf
+
+# Windows-скрипты должны запускаться двойным кликом, поэтому им нужен CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Бинарные файлы: Git не должен ни трогать переводы строк, ни считать диффы.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.pdf binary
+*.zip binary
