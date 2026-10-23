@@ -67,13 +67,29 @@ Write-Section 'Виртуальное окружение'
 $pythonExe = Join-Path $root 'backend\.venv\Scripts\python.exe'
 if (Test-Path $pythonExe) {
     Write-Ok "venv существует: $pythonExe"
-    $pkgs = & $pythonExe -m pip list --format=freeze 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        $django = $pkgs | Where-Object { $_ -match '^Django==' }
-        if ($django) { Write-Ok "Django установлен: $django" } else { Write-Warn 'Django не установлен — нужен pip install' }
-        Write-Ok "пакетов установлено: $(($pkgs | Measure-Object).Count)"
+    # `pip list` в этом окружении может висеть минутами, поэтому спрашиваем
+    # метаданные напрямую через importlib — это мгновенно и без сети.
+    $probe = @'
+import importlib.metadata as m
+import sys
+for name in ("Django", "djangorestframework", "psycopg", "celery", "pytest", "ruff"):
+    try:
+        print(f"{name}=={m.version(name)}")
+    except m.PackageNotFoundError:
+        print(f"{name}==MISSING")
+'@
+    $probeFile = Join-Path $env:TEMP 'dsh-doctor-probe.py'
+    Set-Content -Path $probeFile -Value $probe -Encoding UTF8
+    $pkgs = & $pythonExe $probeFile 2>$null
+    Remove-Item $probeFile -ErrorAction SilentlyContinue
+
+    $missing = $pkgs | Where-Object { $_ -match '==MISSING$' }
+    if ($missing) {
+        Write-Bad "не установлено: $(($missing -replace '==MISSING$', '') -join ', ')"
+        Write-Warn 'Нужен pip install -r requirements-dev.txt'
     } else {
-        Write-Bad 'pip не отвечает'
+        $django = $pkgs | Where-Object { $_ -match '^Django==' }
+        Write-Ok "зависимости на месте, $django"
     }
 } else {
     Write-Bad 'venv отсутствует — нужен python -m venv backend\.venv'
@@ -104,7 +120,17 @@ $ports = @(
 )
 
 foreach ($p in $ports) {
-    $open = Test-NetConnection -ComputerName 127.0.0.1 -Port $p.Port -InformationLevel Quiet -WarningAction SilentlyContinue
+    # Test-NetConnection на каждый порт тратит по несколько секунд (он ещё и
+    # резолвит имя), поэтому используем TCP-клиент с таймаутом в миллисекундах.
+    $client = [System.Net.Sockets.TcpClient]::new()
+    try {
+        $task = $client.ConnectAsync('127.0.0.1', $p.Port)
+        $open = $task.Wait(700) -and $client.Connected
+    } catch {
+        $open = $false
+    } finally {
+        $client.Dispose()
+    }
     if ($open) { Write-Ok "$($p.Name) слушает порт $($p.Port)" } else { Write-Warn "$($p.Name) не слушает порт $($p.Port)" }
 }
 

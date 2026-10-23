@@ -83,8 +83,10 @@ if (-not (Test-Path $pythonExe)) {
 
 if (-not $SkipInstall) {
     Write-Host '  Устанавливаю зависимости (это займёт пару минут)...'
-    & $pythonExe -m pip install --upgrade pip --quiet
-    & $pythonExe -m pip install -r (Join-Path $root 'backend\requirements-dev.txt')
+    # --no-cache-dir и --progress-bar off: в ограниченных окружениях кеш в %TEMP%
+    # недоступен и даёт PermissionError, а прогресс-бар бесконечно висит в логах.
+    & $pythonExe -m pip install --no-cache-dir --progress-bar off `
+        -r (Join-Path $root 'backend\requirements-dev.txt')
     if ($LASTEXITCODE -ne 0) { throw 'pip install завершился с ошибкой' }
     Write-Ok 'зависимости установлены'
 }
