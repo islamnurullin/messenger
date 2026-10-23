@@ -1,0 +1,63 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# Первый слой импортов — пакеты из корня backend/ (apps, config).
+src = ["."]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "I",   # isort
+  "UP",  # pyupgrade
+  "B",   # flake8-bugbear
+  "DJ",  # flake8-django
+  "RUF", # ruff-specific
+]
+ignore = [
+  "E501", # длину строк держит форматтер
+  # Документация и комментарии на русском — это осознанное решение проекта.
+  # RUF001/002/003 ругаются на кириллические «а», «о», «с», похожие на латиницу,
+  # и на русских текстах дают сплошные ложные срабатывания.
+  "RUF001",
+  "RUF002",
+  "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/migrations/*.py" = ["E501", "RUF012"]
+"config/settings/*.py" = ["F403", "F405"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+python_files = ["test_*.py", "*_test.py"]
+testpaths = ["apps"]
+addopts = "-q --strict-markers"
+# Явно, иначе pytest-asyncio сыплет предупреждением на каждом прогоне.
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+  "slow: долгие тесты (нагрузка, индексация)",
+  "integration: требуют запущенной инфраструктуры",
+]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main"]
+strict = false
+warn_unused_ignores = true
+warn_redundant_casts = true
+check_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.dev"
+
+[tool.coverage.run]
+source = ["apps"]
+omit = ["*/migrations/*", "*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError"]

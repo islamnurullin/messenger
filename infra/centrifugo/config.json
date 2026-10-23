@@ -1,0 +1,42 @@
+{
+  "client": {
+    "allowed_origins": [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173"
+    ]
+  },
+  "http_api": {
+    "key": "overridden-by-env-CENTRIFUGO_HTTP_API_KEY"
+  },
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "redis://redis:6379/0"
+    }
+  },
+  "channel": {
+    "namespaces": [
+      {
+        "name": "chat",
+        "presence": true,
+        "join_leave": true,
+        "force_push_join_leave": false,
+        "history_size": 100,
+        "history_ttl": "600s",
+        "force_recovery": true,
+        "allow_subscribe_for_client": false
+      },
+      {
+        "name": "user",
+        "presence": false,
+        "history_size": 50,
+        "history_ttl": "600s",
+        "force_recovery": true,
+        "allow_subscribe_for_client": false
+      }
+    ]
+  },
+  "log": {
+    "level": "info"
+  }
+}

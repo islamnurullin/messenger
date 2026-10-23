@@ -1,0 +1,21 @@
+{
+	"python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+	"python.testing.pytestEnabled": true,
+	"python.testing.pytestArgs": ["backend"],
+	"python.analysis.extraPaths": ["${workspaceFolder}/backend"],
+	"[python]": {
+		"editor.defaultFormatter": "charliermarsh.ruff",
+		"editor.formatOnSave": true,
+		"editor.codeActionsOnSave": { "source.fixAll.ruff": "explicit" }
+	},
+	"[svelte]": {
+		"editor.defaultFormatter": "svelte.svelte-vscode"
+	},
+	"files.eol": "\n",
+	"files.insertFinalNewline": true,
+	"search.exclude": {
+		"**/node_modules": true,
+		"**/.svelte-kit": true,
+		"**/.venv": true
+	}
+}

@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media/
+/staticfiles/
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+.pnpm-store/
+.npm/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.svelte-kit/
+build/
+dist/
+.output/
+
+# Electron
+desktop/release/
+desktop/out/
+
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+*.iml
+.flutter-plugins
+
+# IDE / OS
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing / coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+coverage.xml
+*.lcov
+
+# Docker volumes (local dev data)
+infra/volumes/
+
+# Временные файлы скриптов и диагностики
+.tmp/
+*.bak-*
