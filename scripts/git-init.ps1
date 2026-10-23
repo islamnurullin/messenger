@@ -61,7 +61,7 @@ try {
     git commit -m @'
 chore: каркас монорепо и health-check
 
-Неделя 1: инфраструктура, скелет Django, SvelteKit, документация.
+Этап 1: инфраструктура, скелет Django, SvelteKit, документация.
 
 - Django 5.1 + DRF, кастомная модель User с входом по логину
 - PostgreSQL, Redis, Centrifugo в docker compose
