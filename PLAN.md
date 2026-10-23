@@ -259,6 +259,19 @@ Centrifugo. Дополнительно — `EXPLAIN ANALYZE` на горячих
 
 ## 12. Ближайший шаг
 
-Неделя 1: поднять монорепо и инфраструктуру — `docker compose` с Postgres, Redis,
-Elasticsearch и Centrifugo, скелет Django с `/api/health`, скелет SvelteKit, первый коммит
-в `main`, ветка `develop`, README с диаграммой.
+**Неделя 1 закрыта.** Сделано и проверено: монорепо, `docker compose up` поднимает
+Postgres/Redis/Centrifugo (Elasticsearch — профиль `search`), скелет Django с
+`/api/health` (все проверки `ok`), скелет SvelteKit с работ��ющими страницами «Обзор» и
+«Состояние», CI, README, ADR, первый коммит в `main` и ветка `develop`.
+
+**Неделя 2 — «Аккаунты».** План работ:
+
+1. `apps/accounts`: сериализаторы и вьюхи `POST /api/auth/register`, `/login`, `/refresh`
+   на `rest_framework_simplejwt`; `GET/PATCH /api/me`.
+2. Валидация: уникальность `username` без учёта регистра, пароль через
+   `AUTH_PASSWORD_VALIDATORS`, запрет менять чужой профиль.
+3. Аватар: загрузка через `PATCH /api/me` с ограничением `ATTACHMENT_MAX_BYTES`,
+   ресайз через Pillow.
+4. Тесты на pytest: регистрация, вход, обновление токена, доступ к `/api/me` без токена → 401.
+5. Фронтенд: страницы `/login` и `/register`, хранение токена, защита маршрутов.
+6. Демо для сдачи: регистрация → вход → профиль, всё через веб-интерфейс.
