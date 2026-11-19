@@ -4,6 +4,9 @@
 Electron, мобильное приложение на Flutter. Бэкенд — Django + PostgreSQL, доставка в
 реальном времени — Centrifugo, полнотекстовый поиск — Elasticsearch.
 
+Репозиторий: <https://github.com/islamnurullin/messenger>. Статус CI:
+[![CI](https://github.com/islamnurullin/messenger/actions/workflows/ci.yml/badge.svg)](https://github.com/islamnurullin/messenger/actions/workflows/ci.yml)
+
 > **Статус: этап 2 из 12 — выполнен.** Работают инфраструктура, health-check и
 > аккаунты: регистрация, вход по логину и паролю, профиль с аватаром. Переписок
 > пока нет: дальше этап 3 «Чаты».
@@ -39,7 +42,7 @@ Flutter и Android SDK понадобятся только на этапе мо�
 ## Быстрый старт
 
 ```bash
-git clone <url> messenger
+git clone https://github.com/islamnurullin/messenger.git
 cd messenger
 cp .env.example .env
 ```
