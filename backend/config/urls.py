@@ -10,6 +10,8 @@ urlpatterns = [
     path("api/", include("apps.common.urls")),
     path("api/", include("apps.accounts.urls")),
     path("api/", include("apps.chats.urls")),
+    path("api/", include("apps.messaging.urls")),
+    path("api/", include("apps.realtime.urls")),
 ]
 
 if settings.DEBUG:

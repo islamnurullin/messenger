@@ -1,6 +1,15 @@
 import { browser } from '$app/environment';
 import { API_URL } from '$lib/config';
-import type { AuthResponse, Chat, ChatMember, CreateChatBody, HealthResponse, User } from './types';
+import type {
+	AuthResponse,
+	Chat,
+	ChatMember,
+	CreateChatBody,
+	HealthResponse,
+	Message,
+	MessagesPage,
+	User
+} from './types';
 
 /** Ошибка API с кодом статуса: страницам нужно различать 401 и остальное. */
 export class ApiError extends Error {
@@ -177,5 +186,30 @@ export const api = {
 		request<{ last_read_seq: number; unread: number; updated: boolean }>(`/api/chats/${id}/read`, {
 			method: 'POST',
 			body: JSON.stringify({ last_read_seq: lastReadSeq })
+		}),
+
+	messages: (id: number, options: { before?: number; limit?: number } = {}) => {
+		const params = new URLSearchParams();
+		if (options.before !== undefined) params.set('before', String(options.before));
+		if (options.limit !== undefined) params.set('limit', String(options.limit));
+		const query = params.toString();
+		return request<MessagesPage>(`/api/chats/${id}/messages${query ? `?${query}` : ''}`);
+	},
+	/**
+	 * Отправка. client_msg_id генерирует клиент: без него ретрай после обрыва
+	 * связи оставит в переписке два одинаковых сообщения.
+	 */
+	sendMessage: (id: number, body: string, clientMsgId: string) =>
+		request<Message>(`/api/chats/${id}/messages`, {
+			method: 'POST',
+			body: JSON.stringify({ body, client_msg_id: clientMsgId })
+		}),
+
+	realtimeToken: () =>
+		request<{ token: string; ws_url: string }>('/api/realtime/token', { method: 'POST' }),
+	subscriptionToken: (channel: string) =>
+		request<{ token: string }>('/api/realtime/subscribe', {
+			method: 'POST',
+			body: JSON.stringify({ channel })
 		})
 };
