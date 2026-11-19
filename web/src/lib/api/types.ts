@@ -64,3 +64,21 @@ export interface ChatMember {
 export type CreateChatBody =
 	| { type: 'direct'; username: string }
 	| { type: 'group' | 'channel'; title: string; usernames?: string[] };
+
+/** Сообщение — совпадает с MessageSerializer. */
+export interface Message {
+	id: number;
+	/** Монотонный номер внутри чата: по нему сортировка и пагинация. */
+	seq: number;
+	sender: User | null;
+	body: string;
+	created_at: string;
+}
+
+/** Страница истории — совпадает с build_page_data. */
+export interface MessagesPage {
+	messages: Message[];
+	has_more: boolean;
+	oldest_seq: number | null;
+	newest_seq: number | null;
+}
