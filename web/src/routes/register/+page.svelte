@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { ApiError } from '$lib/api/client';
 	import { auth } from '$lib/auth.svelte';
 
@@ -9,6 +10,13 @@
 	let confirm = $state('');
 	let error = $state<string | null>(null);
 	let submitting = $state(false);
+
+	// Уже вошедшему регистрация не нужна.
+	$effect(() => {
+		if (auth.ready && auth.isAuthenticated && page.url.pathname === '/register') {
+			void goto('/profile', { replaceState: true });
+		}
+	});
 
 	// Те же правила, что в RegisterSerializer: латиница, цифры, подчёркивание.
 	const USERNAME_RE = /^[A-Za-z0-9_]{3,32}$/;

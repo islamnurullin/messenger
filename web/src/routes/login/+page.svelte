@@ -12,6 +12,14 @@
 	// Куда вернуться после входа: middleware кладёт сюда исходный путь.
 	const redirectTo = $derived(page.url.searchParams.get('next') ?? '/profile');
 
+	// Уже вошедшему форма входа не нужна — уводим туда, куда он шёл.
+	// Проверяем auth.ready, иначе на первом рендере user ещё null и редиректа не будет.
+	$effect(() => {
+		if (auth.ready && auth.isAuthenticated && page.url.pathname === '/login') {
+			void goto(redirectTo, { replaceState: true });
+		}
+	});
+
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		error = null;

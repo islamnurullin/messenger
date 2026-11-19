@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { auth } from '$lib/auth.svelte';
 	import '../app.css';
@@ -16,6 +17,13 @@
 	$effect(() => {
 		void auth.load();
 	});
+
+	// Выход уводит на страницу входа: остаться на /profile с «войдите в аккаунт»
+	// выглядит как поломка, хотя технически всё верно.
+	async function signOut() {
+		auth.logout();
+		await goto('/login', { replaceState: true });
+	}
 </script>
 
 <header>
@@ -31,7 +39,7 @@
 			<a href="/profile" class="who" class:active={page.url.pathname === '/profile'}>
 				{auth.user.name}
 			</a>
-			<button type="button" onclick={() => auth.logout()}>Выйти</button>
+			<button type="button" onclick={signOut}>Выйти</button>
 		{:else if auth.ready}
 			<a href="/login" class:active={page.url.pathname === '/login'}>Войти</a>
 			<a href="/register" class="cta" class:active={page.url.pathname === '/register'}>
