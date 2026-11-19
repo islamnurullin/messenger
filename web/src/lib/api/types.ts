@@ -33,3 +33,34 @@ export interface AuthResponse {
 	access: string;
 	refresh: string;
 }
+
+export type ChatType = 'direct' | 'group' | 'channel';
+export type ChatRole = 'owner' | 'admin' | 'member';
+
+/** Чат глазами участника — совпадает с ChatSerializer. */
+export interface Chat {
+	id: number;
+	type: ChatType;
+	title: string;
+	/** Последний seq в чате: он же курсор пагинации и источник unread. */
+	last_seq: number;
+	/** last_seq - last_read_seq, считает бэкенд. */
+	unread: number;
+	last_read_seq: number;
+	/** Собеседник личного чата; у групп и каналов null. */
+	peer: User | null;
+	member_count: number;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface ChatMember {
+	user: User;
+	role: ChatRole;
+	last_read_seq: number;
+	joined_at: string;
+}
+
+export type CreateChatBody =
+	| { type: 'direct'; username: string }
+	| { type: 'group' | 'channel'; title: string; usernames?: string[] };

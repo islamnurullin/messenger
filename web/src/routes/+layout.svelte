@@ -3,12 +3,14 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { auth } from '$lib/auth.svelte';
+	import { chats } from '$lib/chats.svelte';
 	import '../app.css';
 
 	let { children }: { children: Snippet } = $props();
 
 	const navItems = [
 		{ href: '/', label: 'Обзор' },
+		{ href: '/chats', label: 'Чаты' },
 		{ href: '/status', label: 'Состояние' }
 	];
 
@@ -22,6 +24,7 @@
 	// выглядит как поломка, хотя технически всё верно.
 	async function signOut() {
 		auth.logout();
+		chats.reset();
 		await goto('/login', { replaceState: true });
 	}
 </script>
@@ -30,7 +33,11 @@
 	<nav>
 		<strong>Messenger</strong>
 		{#each navItems as item (item.href)}
-			<a href={item.href} class:active={page.url.pathname === item.href}>{item.label}</a>
+			{@const active =
+				item.href === '/'
+					? page.url.pathname === '/'
+					: page.url.pathname === item.href || page.url.pathname.startsWith(item.href + '/')}
+			<a href={item.href} class:active>{item.label}</a>
 		{/each}
 
 		<span class="spacer"></span>
