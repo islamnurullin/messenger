@@ -35,6 +35,9 @@ quote-style = "double"
 DJANGO_SETTINGS_MODULE = "config.settings.dev"
 python_files = ["test_*.py", "*_test.py"]
 testpaths = ["apps"]
+# --basetemp здесь не задаём: путь относителен каталогу запуска, а pytest
+# создаёт его без parents=True, поэтому на чистой машине всё падает.
+# Временное дерево pytest в этой среде попадает в backend/ (см. .gitignore).
 addopts = "-q --strict-markers"
 # Явно, иначе pytest-asyncio сыплет предупреждением на каждом прогоне.
 asyncio_default_fixture_loop_scope = "function"

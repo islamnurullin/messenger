@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
+	import { auth } from '$lib/auth.svelte';
 	import '../app.css';
 
 	let { children }: { children: Snippet } = $props();
@@ -9,6 +10,12 @@
 		{ href: '/', label: 'Обзор' },
 		{ href: '/status', label: 'Состояние' }
 	];
+
+	// Один раз при загрузке приложения: если в localStorage есть токен,
+	// подтягиваем профиль. SSR это не делает — там нет localStorage.
+	$effect(() => {
+		void auth.load();
+	});
 </script>
 
 <header>
@@ -17,6 +24,20 @@
 		{#each navItems as item (item.href)}
 			<a href={item.href} class:active={page.url.pathname === item.href}>{item.label}</a>
 		{/each}
+
+		<span class="spacer"></span>
+
+		{#if auth.isAuthenticated && auth.user}
+			<a href="/profile" class="who" class:active={page.url.pathname === '/profile'}>
+				{auth.user.name}
+			</a>
+			<button type="button" onclick={() => auth.logout()}>Выйти</button>
+		{:else if auth.ready}
+			<a href="/login" class:active={page.url.pathname === '/login'}>Войти</a>
+			<a href="/register" class="cta" class:active={page.url.pathname === '/register'}>
+				Регистрация
+			</a>
+		{/if}
 	</nav>
 </header>
 
@@ -61,6 +82,43 @@
 	nav a.active {
 		color: var(--text);
 		font-weight: 600;
+	}
+
+	.spacer {
+		flex: 1;
+	}
+
+	.who {
+		color: var(--text) !important;
+		font-weight: 600;
+	}
+
+	nav button {
+		background: transparent;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		color: var(--text-muted);
+		cursor: pointer;
+		font: inherit;
+		font-size: 13px;
+		padding: 5px 12px;
+	}
+
+	nav button:hover {
+		color: var(--text);
+		border-color: var(--text-muted);
+	}
+
+	nav a.cta {
+		background: var(--accent);
+		color: #fff;
+		border-radius: 8px;
+		padding: 5px 12px;
+	}
+
+	nav a.cta:hover {
+		filter: brightness(1.1);
+		text-decoration: none;
 	}
 
 	main {

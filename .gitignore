@@ -9,13 +9,19 @@ env/
 *.egg-info/
 dist/
 build/
+# pytest создаёт здесь временные каталоги, если системный %TEMP% недоступен
+# (так бывает под песочницей: tempfile молча откатывается к текущему каталогу).
+pytest-of-*/
+.pytest_cache/
 
 # Django
 *.log
 db.sqlite3
 db.sqlite3-journal
-/media/
-/staticfiles/
+# media и staticfiles создаются относительно BASE_DIR (backend/), а не корня репо:
+# якорь /media/ их не покрывал, и загруженные аватары попадали в git status.
+media/
+staticfiles/
 .env
 .env.*
 !.env.example
