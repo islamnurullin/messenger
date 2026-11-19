@@ -10,7 +10,6 @@ from __future__ import annotations
 from typing import Any
 
 from rest_framework import status
-from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
@@ -27,6 +26,30 @@ def _code_for(response_status: int) -> str:
     }.get(response_status, "server_error")
 
 
+def _first_message(details: Any) -> str | None:
+    """Достаёт человекочитаемую строку из вложенной структуры ошибок DRF.
+
+    ``str(exc.detail)`` для словаря отдаёт repr питоновского dict —
+    ``{'username': [ErrorDetail(...)]}``. Клиент показывает это пользователю,
+    поэтому берём первую строку и отдаём её как ``message``, а исходную
+    структуру оставляем в ``details`` для подсветки конкретного поля формы.
+    """
+    if isinstance(details, str):
+        return details
+    if isinstance(details, list):
+        for item in details:
+            found = _first_message(item)
+            if found:
+                return found
+        return None
+    if isinstance(details, dict):
+        for value in details.values():
+            found = _first_message(value)
+            if found:
+                return found
+    return None
+
+
 def api_exception_handler(exc: Exception, context: dict[str, Any]) -> Response | None:
     response = drf_exception_handler(exc, context)
 
@@ -39,18 +62,13 @@ def api_exception_handler(exc: Exception, context: dict[str, Any]) -> Response |
         )
 
     detail = response.data
-    if isinstance(exc, APIException) and isinstance(detail, list | dict):
-        message = str(getattr(exc, "detail", "Ошибка запроса"))
-        details = detail
-    else:
-        message = "Ошибка запроса"
-        details = detail
+    message = _first_message(detail) or "Ошибка запроса"
 
     response.data = {
         "error": {
             "code": _code_for(response.status_code),
             "message": message,
-            "details": details,
+            "details": detail,
         }
     }
     return response

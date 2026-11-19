@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { API_URL } from '$lib/config';
-import type { AuthResponse, HealthResponse, User } from './types';
+import type { AuthResponse, Chat, ChatMember, CreateChatBody, HealthResponse, User } from './types';
 
 /** Ошибка API с кодом статуса: страницам нужно различать 401 и остальное. */
 export class ApiError extends Error {
@@ -159,5 +159,23 @@ export const api = {
 			return request<User>('/api/me', { method: 'PATCH', body: form });
 		}
 		return request<User>('/api/me', { method: 'PATCH', body: JSON.stringify(body) });
-	}
+	},
+
+	chats: () => request<Chat[]>('/api/chats'),
+	// Бэкенд отвечает 201 при создании и 200, если личный чат уже есть:
+	// повторное «написать пользователю» не должно выглядеть ошибкой.
+	createChat: (body: CreateChatBody) =>
+		request<Chat>('/api/chats', { method: 'POST', body: JSON.stringify(body) }),
+	chat: (id: number) => request<Chat>(`/api/chats/${id}`),
+	chatMembers: (id: number) => request<ChatMember[]>(`/api/chats/${id}/members`),
+	addChatMember: (id: number, username: string) =>
+		request<ChatMember>(`/api/chats/${id}/members`, {
+			method: 'POST',
+			body: JSON.stringify({ username })
+		}),
+	markRead: (id: number, lastReadSeq: number) =>
+		request<{ last_read_seq: number; unread: number; updated: boolean }>(`/api/chats/${id}/read`, {
+			method: 'POST',
+			body: JSON.stringify({ last_read_seq: lastReadSeq })
+		})
 };
