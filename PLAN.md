@@ -264,14 +264,28 @@ Postgres/Redis/Centrifugo (Elasticsearch — профиль `search`), скел�
 `/api/health` (все проверки `ok`), скелет SvelteKit с работающими страницами «Обзор» и
 «Состояние», CI, README, ADR, первый коммит в `main` и ветка `develop`.
 
-**Этап 2 — «Аккаунты».** План работ:
+**Этап 2 «Аккаунты» закрыт.** Сделано и проверено:
 
-1. `apps/accounts`: сериализаторы и вьюхи `POST /api/auth/register`, `/login`, `/refresh`
-   на `rest_framework_simplejwt`; `GET/PATCH /api/me`.
-2. Валидация: уникальность `username` без учёта регистра, пароль через
-   `AUTH_PASSWORD_VALIDATORS`, запрет менять чужой профиль.
-3. Аватар: загрузка через `PATCH /api/me` с ограничением `ATTACHMENT_MAX_BYTES`,
-   ресайз через Pillow.
-4. Тесты на pytest: регистрация, вход, обновление токена, доступ к `/api/me` без токена → 401.
-5. Фронтенд: страницы `/login` и `/register`, хранение токена, защита маршрутов.
-6. Демо для сдачи: регистрация → вход → профиль, всё через веб-интерфейс.
+1. `apps/accounts`: `POST /api/auth/register`, `/login`, `/refresh`, `GET/PATCH /api/me`.
+2. Валидация: уникальность `username` без учёта регистра (функциональный уникальный
+   индекс `uniq_user_username_lower`), пароль через `AUTH_PASSWORD_VALIDATORS`,
+   `username` нельзя изменить через `PATCH /api/me`.
+3. Аватар: `PATCH /api/me` multipart, ограничение `ATTACHMENT_MAX_BYTES`, проверка
+   формата через Pillow (JPEG/PNG/WebP), center-crop и ресайз до 256×256.
+4. Тесты: 36 проходят (22 из них — API аккаунтов).
+5. Фронтенд: `/login`, `/register`, `/profile`, автопродление `access` по 401,
+   синхронизация вкладок через событие `messenger:auth`.
+6. Демо: регистрация → вход → профиль работают вживую (проверено 12 сценариев).
+
+**Этап 3 — «Чаты».** План работ:
+
+1. `apps/chats`: модели `Chat` и `ChatMember`, поля `type` (direct/group/channel),
+   `title`, `last_seq`, `created_at`.
+2. `POST /api/chats` — создать личный чат (идемпотентно: повтор с тем же
+   собеседником возвращает существующий) и группу; `GET /api/chats` — список с
+   unread-счётчиком; `POST /api/chats/{id}/members` — добавить участника.
+3. Права: доступ к чату только участникам, `allow_subscribe_for_client=false` в
+   Centrifugo — токен выдаёт бэкенд.
+4. Тесты: создание личного чата не плодит дубли, не-участник получает 404, unread
+   считается как `last_seq - last_read_seq`.
+5. Фронтенд: список чатов, создание личного чата по имени пользователя.

@@ -24,6 +24,15 @@ logger = logging.getLogger(__name__)
 # Короткий таймаут: health-check не должен висеть, если зависимость «почти жива».
 CHECK_TIMEOUT_SECONDS = 2
 
+# Проверяем свои сервисы напрямую, не через системный прокси.
+#
+# httpx по умолчанию (trust_env=True) читает прокси из окружения, а на Windows —
+# ещё и из реестра через urllib.request.getproxies(). Если на машине включён
+# корпоративный прокси (типичная ситуация в вузе), запрос к 127.0.0.1:8001
+# уходит на прокси, и health-check показывает 502 при полностью живом Centrifugo.
+# Проверка живости локального контейнера через внешний прокси бессмысленна.
+HTTPX_LOCAL = {"trust_env": False, "timeout": CHECK_TIMEOUT_SECONDS}
+
 
 def _check_database() -> dict:
     started = time.perf_counter()
@@ -68,7 +77,7 @@ def _check_centrifugo() -> dict:
             f"{settings.CENTRIFUGO_HTTP_URL.rstrip('/')}/api",
             json={"method": "info"},
             headers={"X-API-Key": settings.CENTRIFUGO_API_KEY},
-            timeout=CHECK_TIMEOUT_SECONDS,
+            **HTTPX_LOCAL,
         )
     except Exception as exc:
         return {"status": "error", "error": str(exc)}
@@ -100,7 +109,7 @@ def _check_elasticsearch() -> dict:
 
         response = httpx.get(
             f"{settings.ELASTICSEARCH_URL.rstrip('/')}/_cluster/health",
-            timeout=CHECK_TIMEOUT_SECONDS,
+            **HTTPX_LOCAL,
         )
         response.raise_for_status()
         return {

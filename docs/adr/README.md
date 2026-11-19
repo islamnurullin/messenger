@@ -11,6 +11,7 @@
 | [0001](0001-stack.md) | Выбор стека: Django + Centrifugo + SvelteKit + Electron + Flutter | принято |
 | [0002](0002-monotonic-seq.md) | Монотонный `seq` внутри чата вместо сортировки по времени | принято |
 | [0003](0003-write-then-publish.md) | Сначала коммит в PostgreSQL, затем публикация в Centrifugo | принято |
+| [0004](0004-jwt-storage.md) | JWT хранится в `localStorage`, а не в httpOnly-cookie | принято |
 
 ## Как добавить запись
 

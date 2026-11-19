@@ -11,6 +11,7 @@ from typing import ClassVar
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 
@@ -63,6 +64,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name = "пользователь"
         verbose_name_plural = "пользователи"
         ordering = ("username",)
+        constraints: ClassVar[list[models.BaseConstraint]] = [
+            # unique=True различает регистр: Islam и islam — два разных человека,
+            # которых невозможно различить в интерфейсе. Функциональный индекс
+            # ловит гонку двух одновременных регистраций, которую проверка в
+            # сериализаторе пропускает.
+            models.UniqueConstraint(Lower("username"), name="uniq_user_username_lower"),
+        ]
 
     def __str__(self) -> str:
         return self.username

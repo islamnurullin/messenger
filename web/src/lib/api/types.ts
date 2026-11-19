@@ -13,3 +13,23 @@ export interface HealthResponse {
 	status: HealthStatus;
 	checks: Record<string, ComponentCheck>;
 }
+
+/** Профиль — совпадает с ProfileSerializer на бэкенде. */
+export interface User {
+	id: number;
+	username: string;
+	display_name: string;
+	/** display_name, а если пусто — username. Считает бэкенд. */
+	name: string;
+	bio: string;
+	avatar: string | null;
+	created_at?: string;
+	last_seen_at?: string | null;
+}
+
+/** Ответ /api/auth/register и /api/auth/login. */
+export interface AuthResponse {
+	user: User;
+	access: string;
+	refresh: string;
+}
